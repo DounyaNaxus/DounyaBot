@@ -334,7 +334,19 @@ function updateCookies(body) {
   return { ok: true };
 }
 
-const cookiePanel = createCookiePanel({ log });
+const cookiePanel = createCookiePanel({
+  log,
+  onAccountChange: ({ status }) => {
+    log.info("cookie-panel", "تغيير حالة حساب، جاري إعادة تشغيل البوت", { status });
+    stopListener("account_changed");
+    conn.resetAttempts();
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      startBot();
+    }, 3000);
+  },
+});
 
 const healthServer = createHealthServer({
   connectionState: conn,
