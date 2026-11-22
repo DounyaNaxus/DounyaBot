@@ -41,7 +41,7 @@ function readBody(req) {
   });
 }
 
-function createHealthServer({ connectionState, memoryUsage = () => process.memoryUsage(), adminToken, handlers, log }) {
+function createHealthServer({ connectionState, memoryUsage = () => process.memoryUsage(), adminToken, handlers, log, cookiePanel = null }) {
   function buildStatus() {
     const snap = connectionState.snapshot();
     const usage = memoryUsage();
@@ -119,6 +119,12 @@ function createHealthServer({ connectionState, memoryUsage = () => process.memor
     if (pathname === "/testsend" || pathname === "/updatecookies") {
       return handleAdmin(req, res, url);
     }
+
+    if (cookiePanel) {
+      const handled = await cookiePanel.route(req, res);
+      if (handled !== null) return;
+    }
+
     return sendJson(res, 404, { error: "not_found" });
   }
 
