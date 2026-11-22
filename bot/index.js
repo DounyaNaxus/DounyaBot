@@ -231,10 +231,16 @@ function onLogin(err, api) {
   }
 }
 
-function startBot() {
+async function startBot() {
   if (shuttingDown || loginInFlight || listener.active) return;
 
-  let appState = cookiePanel.cookieStore.getActiveCookies();
+  let appState;
+  try {
+    appState = await cookiePanel.cookieStore.getActiveCookies();
+  } catch (error) {
+    log.warn("login", "تعذر قراءة الحساب النشط من المتجر", { message: error.message });
+    appState = null;
+  }
   if (appState) {
     log.info("login", "جاري تسجيل الدخول باستخدام حساب نشط من لوحة الكوكيز");
   } else {
