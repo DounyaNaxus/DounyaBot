@@ -13,6 +13,7 @@ const { createMessageDeduper } = require("./message-dedup");
 const { createMemoryMonitor } = require("./memory-monitor");
 const { createHealthServer } = require("./health-server");
 const { createKeepAlive } = require("./keep-alive");
+const { createCookiePanel } = require("./cookie-panel");
 const { RESTART_EXIT_CODE } = require("./supervisor");
 
 const LOGIN_OPTIONS = {
@@ -233,10 +234,16 @@ function onLogin(err, api) {
 function startBot() {
   if (shuttingDown || loginInFlight || listener.active) return;
 
-  const appState = sessionStore.load();
-  if (!appState) {
-    markAttention("missing_session", "لا توجد جلسة فيسبوك صالحة. حدّث الكوكيز عبر لوحة الإدارة");
-    return;
+  let appState = cookiePanel.cookieStore.getActiveCookies();
+  if (appState) {
+    log.info("login", "جاري تسجيل الدخول باستخدام حساب نشط من لوحة الكوكيز");
+  } else {
+    appState = sessionStore.load();
+    if (!appState) {
+      markAttention("missing_session", "لا توجد جلسة فيسبوك صالحة. حدّث الكوكيز عبر لوحة الإدارة");
+      return;
+    }
+    log.info("login", "جاري تسجيل الدخول باستخدام ملف الجلسة المحلي");
   }
 
   loginInFlight = true;
@@ -327,11 +334,14 @@ function updateCookies(body) {
   return { ok: true };
 }
 
+const cookiePanel = createCookiePanel({ log });
+
 const healthServer = createHealthServer({
   connectionState: conn,
   adminToken: config.botAdminToken,
   handlers: { testSend, updateCookies },
   log,
+  cookiePanel,
 });
 
 function shutdown(reason, exitCode = 0) {
