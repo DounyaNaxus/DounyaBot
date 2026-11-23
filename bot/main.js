@@ -3,7 +3,7 @@ const path = require("path");
 const { createRemoteControl } = require("./remote-control");
 const { deleteBotMessageOnAdminReaction } = require("./message-reactions");
 
-const ADMINS = new Set(["61596307157668"]);
+const ADMINS = new Set(["61596920308187"]);
 const commands = new Map();
 
 // عداد الرسائل لكل جروب — كل 568 رسالة يتفاعل البوت
